@@ -33,13 +33,23 @@ async function run() {
        client.connect();
         
        const menuCollection = client.db("bistroDB").collection("menu");
+       const reviewsCollection = client.db("bistroDB").collection("reviews");
+    //    const reviewsCollection = client.db("bistroDB").collection("reviews");
 
+
+    app.get('/reviews', async(req,res)=>{
+        const cursor = reviewsCollection.find();
+        const result = await cursor.toArray()
+        res.send(result);
+       })
+       
        app.get('/menu', async (req,res)=> {
         const cursor = menuCollection.find();
         const result = await cursor.toArray()
         res.send(result); 
        })
 
+    
 
 
     // Send a ping to confirm a successful connection
