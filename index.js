@@ -40,8 +40,18 @@ async function run() {
 //  users api
 app.post('/users', async(req,res)=>{
   const user = req.body;
+  const query = {email: user.email}
+  const existingUser = await usersCollection.findOne(query);
+  if(existingUser){
+    return res.send("User Already Exist in the DB")
+  }
   const result = await usersCollection.insertOne(user)
   res.send(result) 
+})
+
+app.get('/users', async(req,res)=>{
+  const result  = await usersCollection.find().toArray()
+  res.send(result);
 })
 
 // reviews api
