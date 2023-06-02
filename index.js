@@ -10,15 +10,33 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors())
 app.use(express.json())
 
+// Verify JWT
+const verifyJWT = (req,res,next) =>{
+  const authorization = req.headers.authorization;
+  if(!authorization){
+    res.status(401).send({error: true, message: "Unauthorized Access"})
+  }
+  const token = authorization.split(' ')[1];
+  console.log(token);
+  jwt.verify(token,process.env.Access_Token_Secret,(err,decoded)=>{
+    if(err){
+      return res.status(401).send({error: true, message: "Unauthorized Access"})
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
+
+
 app.get('/',(req,res)=>{
 res.send("Bistro Boss server is running...")
 })
 
-
+// jwt
 
 app.post('/jwt', (req,res)=>{
   const user = req.body;
-  const token = jwt.sign(user,env.process.Access_Token_Secret, { expiresIn: '1h' })
+  const token = jwt.sign(user,process.env.Access_Token_Secret, { expiresIn: '1h' })
   res.send({ token})
 })
 
@@ -95,10 +113,14 @@ app.patch('/users/admin/:id',async (req,res)=> {
        })
 
       //  carts api
-        app.get('/carts', async(req,res)=>{
+        app.get('/carts',verifyJWT, async(req,res)=>{
           const email = req.query.email;
           if(!email){
             res.send([]);
+          }
+          const decodedEmail = req.decoded.email;
+          if(email !==decodedEmail){
+            return res.status(403).send({error: true, message: "Forbidden Access"})
           }
           const query = {email: email}
           const cursor = cartCollection.find(query);
