@@ -17,7 +17,7 @@ const verifyJWT = (req,res,next) =>{
     res.status(401).send({error: true, message: "Unauthorized Access"})
   }
   const token = authorization.split(' ')[1];
-  console.log(token);
+  // console.log(token);
   jwt.verify(token,process.env.Access_Token_Secret,(err,decoded)=>{
     if(err){
       return res.status(401).send({error: true, message: "Unauthorized Access"})
@@ -32,13 +32,7 @@ app.get('/',(req,res)=>{
 res.send("Bistro Boss server is running...")
 })
 
-// jwt
 
-app.post('/jwt', (req,res)=>{
-  const user = req.body;
-  const token = jwt.sign(user,process.env.Access_Token_Secret, { expiresIn: '1h' })
-  res.send({ token})
-})
 
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_password}@cluster0.joz6qi9.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -86,6 +80,29 @@ app.delete('/users/:id', async(req,res)=>{
   res.send(result)
 })
 
+// jwt
+
+app.post('/jwt', (req,res)=>{
+  const user = req.body;
+  const token = jwt.sign(user,process.env.Access_Token_Secret, { expiresIn: 30 })
+  res.send({ token})
+})
+// admin api
+
+// security layer: VerifyJWT
+// email check
+// admin check
+app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
+const email = req.params.email;
+if(decoded.email !== email){
+  res.send({admin : false})
+}
+const query ={email : email}
+const user = await usersCollection.findOne(query)
+const result = {admin: user?.role === 'admin'}
+res.send(result)
+})
+
 app.patch('/users/admin/:id',async (req,res)=> {
   const id = req.params.id;
   const filter = {_id : new ObjectId(id)}
@@ -119,7 +136,7 @@ app.patch('/users/admin/:id',async (req,res)=> {
             res.send([]);
           }
           const decodedEmail = req.decoded.email;
-          if(email !==decodedEmail){
+          if(email !== decodedEmail){
             return res.status(403).send({error: true, message: "Forbidden Access"})
           }
           const query = {email: email}
