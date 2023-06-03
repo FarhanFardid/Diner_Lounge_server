@@ -84,7 +84,7 @@ app.delete('/users/:id', async(req,res)=>{
 
 app.post('/jwt', (req,res)=>{
   const user = req.body;
-  const token = jwt.sign(user,process.env.Access_Token_Secret, { expiresIn: 30 })
+  const token = jwt.sign(user,process.env.Access_Token_Secret, { expiresIn: '10h' })
   res.send({ token})
 })
 // admin api
@@ -94,7 +94,7 @@ app.post('/jwt', (req,res)=>{
 // admin check
 app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
 const email = req.params.email;
-if(decoded.email !== email){
+if(email !== req.decoded.email){
   res.send({admin : false})
 }
 const query ={email : email}
