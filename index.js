@@ -55,6 +55,18 @@ async function run() {
        const reviewsCollection = client.db("bistroDB").collection("reviews");
        const cartCollection = client.db("bistroDB").collection("carts");
     
+
+
+      // verify admin
+      const verifyAdmin = async(req,res,next)=>{
+        const email = req.decoded.email;
+        const query = {email:email}
+        const user =await usersCollection.findOne(query);
+        if(user?.role !== 'admin'){
+          return res.status(403).send({error: true, message: "Forbidden Access"});
+        }
+        next();
+      } 
 //  users api
 app.post('/users', async(req,res)=>{
   const user = req.body;
@@ -67,7 +79,7 @@ app.post('/users', async(req,res)=>{
   res.send(result) 
 })
 
-app.get('/users',verifyJWT, async(req,res)=>{
+app.get('/users',verifyJWT, verifyAdmin, async(req,res)=>{
   const result  = await usersCollection.find().toArray()
   res.send(result);
 });
